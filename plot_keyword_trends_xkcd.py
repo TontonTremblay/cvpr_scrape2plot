@@ -66,7 +66,7 @@ def aggregate_by_year(papers: List[Dict], keywords: List[str]):
     """
     year_keyword_counts = defaultdict(lambda: defaultdict(int))  # year -> kw -> count
     year_totals = defaultdict(int)
-    year_any_counts = defaultdict(int)
+    year_any_titles = defaultdict(set)  # year -> set of unique paper identifiers (titles)
 
     for p in papers:
         year = p.get("year")
@@ -74,13 +74,19 @@ def aggregate_by_year(papers: List[Dict], keywords: List[str]):
             continue  # skip malformed year
 
         year_totals[year] += 1
-        hits = search_keywords(f"{p.get('title', '')} {p.get('abstract', '')}", keywords)
+
+        title = p.get("title", "").strip()
+        combined_text = f"{title} {p.get('abstract', '')}"
+        hits = search_keywords(combined_text, keywords)
 
         if hits:
-            year_any_counts[year] += 1
+            year_any_titles[year].add(title)
 
         for kw in hits:
             year_keyword_counts[year][kw] += 1
+
+    # Derive counts without duplicates
+    year_any_counts = {yr: len(titles) for yr, titles in year_any_titles.items()}
 
     return year_keyword_counts, year_totals, year_any_counts
 
@@ -125,7 +131,7 @@ _logging.getLogger("matplotlib.font_manager").setLevel(_logging.ERROR)
 # Plotting
 # --------------------------------------------------------------------------------------
 
-def plot_trends(year_keyword_counts, year_totals, year_any_counts, keywords, metric="percentage", save_path=None):
+def plot_trends(year_keyword_counts, year_totals, year_any_counts, keywords, metric="percentage", include_combined=False, save_path=None):
     """Plot keyword trends over years in xkcd style.
 
     metric: "percentage" or "count".
@@ -153,17 +159,18 @@ def plot_trends(year_keyword_counts, year_totals, year_any_counts, keywords, met
                 y_values.append(val)
             ax.plot(years, y_values, marker="o", linewidth=2, linestyle="-", label=kw)
 
-        # Combined (ANY) line
-        combined_values = []
-        for y in years:
-            if metric == "percentage":
-                total = year_totals[y]
-                val = year_any_counts.get(y, 0) / total * 100 if total else 0
-            else:
-                val = year_any_counts.get(y, 0)
-            combined_values.append(val)
+        if include_combined:
+            # Combined (ANY) line
+            combined_values = []
+            for y in years:
+                if metric == "percentage":
+                    total = year_totals[y]
+                    val = year_any_counts.get(y, 0) / total * 100 if total else 0
+                else:
+                    val = year_any_counts.get(y, 0)
+                combined_values.append(val)
 
-        ax.plot(years, combined_values, marker="s", linewidth=3, linestyle="--", color="black", label="Any")
+            ax.plot(years, combined_values, marker="s", linewidth=3, linestyle="--", color="black", label="Any")
 
         ax.set_xlabel("Year")
         ylabel = "% of papers" if metric == "percentage" else "# Papers"
@@ -190,6 +197,7 @@ def main():
                         help="Keywords to plot")
     parser.add_argument("--metric", choices=["percentage", "count"], default="percentage",
                         help="Plot percentages or raw counts")
+    parser.add_argument("--combined", action="store_true", help="Include a line showing papers with ANY of the keywords")
     parser.add_argument("--save", metavar="PATH", help="Save the figure to this path instead of just showing")
     args = parser.parse_args()
 
@@ -202,7 +210,15 @@ def main():
         print("❌ No data to plot after aggregation!")
         return
 
-    plot_trends(year_keyword_counts, year_totals, year_any_counts, args.keywords, metric=args.metric, save_path=args.save)
+    plot_trends(
+        year_keyword_counts,
+        year_totals,
+        year_any_counts,
+        args.keywords,
+        metric=args.metric,
+        include_combined=args.combined,
+        save_path=args.save,
+    )
 
     print("✅ Plotting complete!")
 
