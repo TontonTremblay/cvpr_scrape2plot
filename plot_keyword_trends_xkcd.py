@@ -51,9 +51,12 @@ def _keyword_variants(base: str) -> List[str]:
     """Return the base and plural form of a word using the inflect library."""
     base_l = base.lower()
     plural = _inflect_eng.plural(base_l)
+    singular = _inflect_eng.singular_noun(base_l)
     variants = {base_l}
     if plural and plural != base_l:
         variants.add(plural)
+    if singular and singular != base_l:
+        variants.add(singular)
     return list(variants)
 
 def search_keywords(text: str, keywords: List[str]) -> Set[str]:
