@@ -25,6 +25,7 @@ from typing import List, Dict, Set
 import matplotlib.pyplot as plt
 from matplotlib import font_manager as _fm
 import logging as _logging
+import inflect
 
 # --------------------------------------------------------------------------------------
 # Helper functions
@@ -44,14 +45,27 @@ def load_papers(json_path: str):
         print(f"❌ Error reading {json_path}: {e}")
         return None
 
+_inflect_eng = inflect.engine()
+
+def _keyword_variants(base: str) -> List[str]:
+    """Return the base and plural form of a word using the inflect library."""
+    base_l = base.lower()
+    plural = _inflect_eng.plural(base_l)
+    variants = {base_l}
+    if plural and plural != base_l:
+        variants.add(plural)
+    return list(variants)
+
 def search_keywords(text: str, keywords: List[str]) -> Set[str]:
-    """Return the subset of keywords found in text (case-insensitive, word-bounded)."""
+    """Return the subset of keywords (base form) found in text, checking simple plural variants."""
     hits = set()
     if not text:
         return hits
     text_lower = text.lower()
     for kw in keywords:
-        pattern = rf"\b{re.escape(kw.lower())}\b"
+        variants = _keyword_variants(kw)
+        # Build combined regex of variants
+        pattern = r"\b(" + "|".join(re.escape(v) for v in variants) + r")\b"
         if re.search(pattern, text_lower):
             hits.add(kw)
     return hits

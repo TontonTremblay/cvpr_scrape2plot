@@ -16,7 +16,7 @@ The image above was generated with the new plotting script and shows the rise of
 
 | Script | Purpose |
 |--------|---------|
-| `cvpr_abstract_scraper_async.py` | Ultra-fast `asyncio`+`aiohttp` scraper that fetches all CVPR papers and stores them in **JSON** / **CSV** (`cvpr_data/`). |
+| `cvpr_abstract_scraper_async.py` | `asyncio`+`aiohttp` scraper that fetches all CVPR papers and stores them in **JSON** / **CSV** (`cvpr_data/`). |
 | `cvpr_keyword_stats.py` | Command-line utility that scans the scraped dataset for arbitrary keywords, prints pretty tables, and can export a detailed **CSV**. |
 | `plot_keyword_trends_xkcd.py` | Reads the dataset and draws XKCD-style line charts showing keyword popularity over the years (optionally with a combined "Any" line). |
 
@@ -48,24 +48,15 @@ usage: plot_keyword_trends_xkcd.py [--data-file DATA] [--keywords KW [KW ...]]
 --metric        Choose raw counts or % of papers per year (default: %).
 ```
 
-# cvpr_keyword_stats.py
-
-```
-usage: cvpr_keyword_stats.py [--data-file DATA] [--keywords KW [KW ...]]
-                             [--save-csv FILE] [--sample-papers N]
-
-Outputs a year-by-year table, trend analysis and an optional CSV with per-
-keyword counts, percentages _and the combined unique count_.
-```
+The plotting internally use the **inflect** Python package, so searches are
+robust to common plural or irregular variants of your keywords.
 
 # Dependencies
 
-See `requirements.txt`. The only **new** runtime dependency is **matplotlib ≥ 3.7** for plotting. The XKCD font is automatically registered if `xkcd-script.ttf` is placed in the repo.
+See `requirements.txt`. The only **new** runtime dependency is **matplotlib ≥ 3.7** for plotting. The XKCD font is automatically registered if `xkcd-script.ttf` is placed in the repo (which is included here).
 
 # License & Citation
 
 This project is provided for academic / research purposes. If you use the dataset or the analysis in a publication, please cite appropriately.
-
----
 
 Made with ❤️ by Jonathan Tremblay, 2025.
