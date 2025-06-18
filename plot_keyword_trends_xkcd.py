@@ -189,7 +189,7 @@ def plot_trends(year_keyword_counts, year_totals, year_any_counts, keywords, met
         ax.set_xlabel("Year")
         ylabel = "% of papers" if metric == "percentage" else "# Papers"
         ax.set_ylabel(ylabel)
-        ax.set_title("ROBOTICS @ CVPR")
+        ax.set_title("JONATHAN TREMBLAY @ CVPR")
         ax.legend()
         ax.grid(True, linestyle="-", alpha=0.25)
         fig.tight_layout()
